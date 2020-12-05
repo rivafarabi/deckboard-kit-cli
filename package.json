@@ -1,0 +1,33 @@
+{
+  "name": "deckboard-kit-cli",
+  "version": "1.0.0",
+  "description": "Deckboard Kit extension cli",
+  "main": "index.js",
+  "bin": {
+    "deckboard-kit": "index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rivafarabi/deckboard-kit-cli.git"
+  },
+  "keywords": [
+    "deckboard",
+    "extention",
+    "node"
+  ],
+  "author": "Riva Farabi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rivafarabi/deckboard-kit-cli/issues"
+  },
+  "homepage": "https://github.com/rivafarabi/deckboard-kit-cli#readme",
+  "dependencies": {
+    "arg": "^4.1.0",
+    "asar": "^2.0.1",
+    "fs-extra": "^8.1.0",
+    "galactus": "^0.2.1",
+    "inquirer": "^6.4.1",
+    "listr": "^0.14.3",
+    "yaml": "^1.6.0"
+  }
+}
