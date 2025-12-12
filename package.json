@@ -24,6 +24,7 @@
   "dependencies": {
     "arg": "^4.1.0",
     "asar": "^2.0.1",
+    "chalk": "^4.1.2",
     "fs-extra": "^8.1.0",
     "galactus": "^0.2.1",
     "inquirer": "^6.4.1",

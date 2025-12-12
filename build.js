@@ -70,12 +70,70 @@ const createTemporaryFolder = async () =>
 	new Observable(async observer => {
 		try {
 			observer.next('Copy files to temp folder');
-			await fs.copy(projectDir, tempDir);
-			await fs.remove(gitDir);
+			await fs.copy(projectDir, tempDir, {
+				filter: (src) => {
+					// Exclude development and build-time files
+					const excludePatterns = [
+						/node_modules[\\\/]\.cache/,
+						/node_modules[\\\/]\.bin/,
+						/\.git/,
+						/\.vscode/,
+						/\.idea/,
+						/dist[\\\/]/,
+						/coverage[\\\/]/,
+						/\.eslintrc\./,
+						/\.prettierrc\./,
+						/\.editorconfig/,
+						/\.DS_Store/,
+						/Thumbs\.db/,
+						/\.log$/,
+						/\.md$/i,
+						/\.test\.js$/,
+						/\.spec\.js$/,
+						/test[\\\/]/,
+						/tests[\\\/]/,
+						/__tests__[\\\/]/,
+						/\.github[\\\/]/,
+						/\.travis\.yml/,
+						/\.npmignore/,
+						/tsconfig\.json/,
+						/jest\.config\.js/,
+						/EXTENSION_GUIDE\.md/
+					];
+
+					return !excludePatterns.some(pattern => pattern.test(src));
+				}
+			});
 
 			try {
 				observer.next('Delete devDependencies modules');
 				await destroyer.destroy();
+
+				// Additional cleanup to minimize size
+				observer.next('Cleaning unnecessary files');
+				const cleanupPaths = [
+					path.join(tempDir, 'node_modules', '.cache'),
+					path.join(tempDir, 'node_modules', '.bin'),
+					path.join(tempDir, '.git'),
+					path.join(tempDir, '.vscode'),
+					path.join(tempDir, '.idea')
+				];
+
+				for (const cleanPath of cleanupPaths) {
+					try {
+						await fs.remove(cleanPath);
+					} catch (err) {
+						// Ignore if path doesn't exist
+					}
+				}
+
+				// Remove all markdown files except README if present
+				const files = await fs.readdir(tempDir);
+				for (const file of files) {
+					if (file.match(/\.md$/i) && file !== 'README.md') {
+						await fs.remove(path.join(tempDir, file));
+					}
+				}
 			} catch (err) {
 				observer.error();
 				throw new Error(chalk.bold.red(err));

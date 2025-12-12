@@ -46,6 +46,12 @@ const generateProjectFiles = async ctx =>
 		observer.next('Generate index.js');
 		await createInitialScript(ctx);
 
+		observer.next('Generate configuration files');
+		await copyConfigFiles(ctx);
+
+		observer.next('Generate documentation');
+		await copyDocumentation(ctx);
+
 		observer.complete();
 	});
 
@@ -86,8 +92,14 @@ const createPackageJson = async ctx => {
 			dependencies: {
 				'deckboard-kit':
 					'https://github.com/rivafarabi/deckboard-kit.git'
+			},
+			devDependencies: {
+				'eslint': '^8.0.0',
+				'prettier': '^2.8.0'
 			}
 		};
+		jsonContent.scripts.lint = 'eslint . --fix';
+		jsonContent.scripts.format = 'prettier --write "**/*.{js,json,yml,yaml}"';
 		await writeJson(path.resolve(dir, 'package.json'), jsonContent, 'utf8');
 	} catch (err) {
 		throw new Error(chalk.bold.red(err));
@@ -125,6 +137,79 @@ const createInitialScript = async ctx => {
 		);
 		const file = fs.readFileSync(path.resolve(dir, 'index.js'), 'utf8');
 		const generatedFile = file.replace('Sample Extension', options.extName);
+		const copyConfigFiles = async ctx => {
+			const { dir } = ctx;
+			try {
+				const configFiles = [
+					'.eslintrc.js',
+					'.prettierrc.json',
+					'.editorconfig',
+					'.gitignore'
+				];
+
+				for (const file of configFiles) {
+					await copyFile(
+						path.resolve(__dirname, 'template', file),
+						path.resolve(dir, file)
+					);
+				}
+			} catch (err) {
+				throw new Error(chalk.bold.red(err));
+			}
+		};
+
+		const copyDocumentation = async ctx => {
+			const { dir } = ctx;
+			try {
+				await copyFile(
+					path.resolve(__dirname, 'template', 'EXTENSION_GUIDE.md'),
+					path.resolve(dir, 'EXTENSION_GUIDE.md')
+				);
+
+				// Create a basic README
+				const readmeContent = `# ${ctx.options.extName}
+
+${ctx.options.description}
+
+## Installation
+
+1. Clone or download this extension
+2. Run \`npm install\`
+
+## Development
+
+- \`npm run lint\` - Run ESLint
+- \`npm run format\` - Format code with Prettier
+- \`npm run build\` - Build the extension to \`.asar\` file
+
+## Usage
+
+After building, copy the \`.asar\` file from the \`dist/\` folder to your Deckboard extensions directory:
+- Windows: \`%USERPROFILE%\\deckboard\\extensions\\\`
+- macOS: \`~/deckboard/extensions/\`
+- Linux: \`~/deckboard/extensions/\`
+
+Then restart Deckboard.
+
+## Documentation
+
+See [EXTENSION_GUIDE.md](EXTENSION_GUIDE.md) for detailed development documentation.
+
+## Author
+
+${ctx.options.author}
+
+## License
+
+MIT
+`;
+
+				await writeFile(path.resolve(dir, 'README.md'), readmeContent, 'utf8');
+			} catch (err) {
+				throw new Error(chalk.bold.red(err));
+			}
+		};
+
 		await writeFile(path.resolve(dir, 'index.js'), generatedFile, 'utf8');
 	} catch (err) {
 		throw new Error(chalk.bold.red(err));
