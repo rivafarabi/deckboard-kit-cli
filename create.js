@@ -137,37 +137,43 @@ const createInitialScript = async ctx => {
 		);
 		const file = fs.readFileSync(path.resolve(dir, 'index.js'), 'utf8');
 		const generatedFile = file.replace('Sample Extension', options.extName);
-		const copyConfigFiles = async ctx => {
-			const { dir } = ctx;
-			try {
-				const configFiles = [
-					'.eslintrc.js',
-					'.prettierrc.json',
-					'.editorconfig',
-					'.gitignore'
-				];
+		await writeFile(path.resolve(dir, 'index.js'), generatedFile, 'utf8');
+	} catch (err) {
+		throw new Error(chalk.bold.red(err));
+	}
+};
 
-				for (const file of configFiles) {
-					await copyFile(
-						path.resolve(__dirname, 'template', file),
-						path.resolve(dir, file)
-					);
-				}
-			} catch (err) {
-				throw new Error(chalk.bold.red(err));
-			}
-		};
+const copyConfigFiles = async ctx => {
+	const { dir } = ctx;
+	try {
+		const configFiles = [
+			'.eslintrc.js',
+			'.prettierrc.json',
+			'.editorconfig',
+			'.gitignore'
+		];
 
-		const copyDocumentation = async ctx => {
-			const { dir } = ctx;
-			try {
-				await copyFile(
-					path.resolve(__dirname, 'template', 'EXTENSION_GUIDE.md'),
-					path.resolve(dir, 'EXTENSION_GUIDE.md')
-				);
+		for (const file of configFiles) {
+			await copyFile(
+				path.resolve(__dirname, 'template', file),
+				path.resolve(dir, file)
+			);
+		}
+	} catch (err) {
+		throw new Error(chalk.bold.red(err));
+	}
+};
 
-				// Create a basic README
-				const readmeContent = `# ${ctx.options.extName}
+const copyDocumentation = async ctx => {
+	const { dir } = ctx;
+	try {
+		await copyFile(
+			path.resolve(__dirname, 'template', 'EXTENSION_GUIDE.md'),
+			path.resolve(dir, 'EXTENSION_GUIDE.md')
+		);
+
+		// Create a basic README
+		const readmeContent = `# ${ctx.options.extName}
 
 ${ctx.options.description}
 
@@ -204,13 +210,7 @@ ${ctx.options.author}
 MIT
 `;
 
-				await writeFile(path.resolve(dir, 'README.md'), readmeContent, 'utf8');
-			} catch (err) {
-				throw new Error(chalk.bold.red(err));
-			}
-		};
-
-		await writeFile(path.resolve(dir, 'index.js'), generatedFile, 'utf8');
+		await writeFile(path.resolve(dir, 'README.md'), readmeContent, 'utf8');
 	} catch (err) {
 		throw new Error(chalk.bold.red(err));
 	}
